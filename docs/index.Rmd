@@ -16,6 +16,14 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r cars}
 summary(cars)
+library(tidyverse)
+
+glimpse(cars)
+
+
+ggplot(cars, aes(x=speed, y= dist)) +
+geom_col()
+  
 ```
 
 ## Including Plots
