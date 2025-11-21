@@ -402,22 +402,22 @@ suppressWarnings</code></pre>
 ##         classes)) 
 ##         tryInvokeRestart(&quot;muffleWarning&quot;))
 ## }
-## &lt;bytecode: 0x000002b4c4807508&gt;
+## &lt;bytecode: 0x00000206e981d508&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>suppressMessages</code></pre>
 <pre><code>## function (expr, classes = &quot;message&quot;) 
 ## withCallingHandlers(expr, message = function(c) if (inherits(c, 
 ##     classes)) tryInvokeRestart(&quot;muffleMessage&quot;))
-## &lt;bytecode: 0x000002b4d015b7e8&gt;
+## &lt;bytecode: 0x00000206f51a4778&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>options(error = expression(NULL))</code></pre>
 <pre class="r"><code>#QUESTION: 
-#“How do regional factors influence the prescribing rate of Omeprazole by GP practices in Scotland in December 2020 compared to 2024?
+#“How do regional factors influence the prescribing rate of Naproxen by GP practices in Scotland in December 2020 compared to 2024?
 
 
 #AIMS: 
 
-#1. Compare the trends of prescription for Omeprazole in 2020 compared to 2024 
+#1. Compare the trends of prescription for Naproxenin 2020 compared to 2024 
 #2. See if Age has an influence in the rate of prescription 
 #3. Theorise and hypothesise if covid 19 may have an effect on inflammation therefore increasing the prescribing rate.
 
@@ -425,6 +425,7 @@ suppressWarnings</code></pre>
 <p>December 2024 &lt; ” <a href="https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e4380152-3d16-446b-9072-108e93cf5caa/download/pitc202412.csv" class="uri">https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e4380152-3d16-446b-9072-108e93cf5caa/download/pitc202412.csv</a>“&gt;</p>
 <p>Decemeber 2020 &lt; ” <a href="https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/0c033702-4d88-4f2d-989c-a709b1f4529e/download/pitc202012.csv" class="uri">https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/0c033702-4d88-4f2d-989c-a709b1f4529e/download/pitc202012.csv</a>”
 &gt;</p>
+<p>December 2016 &lt; ” <a href="https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/597ea4bc-f733-45b6-8a60-5d7a6ac4824c/download/pitc201612.csv" class="uri">https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/597ea4bc-f733-45b6-8a60-5d7a6ac4824c/download/pitc201612.csv</a>”</p>
 <pre class="r"><code>library(tidyverse)
 library(janitor) 
 library(gt) 
@@ -441,13 +442,13 @@ suppressWarnings</code></pre>
 ##         classes)) 
 ##         tryInvokeRestart(&quot;muffleWarning&quot;))
 ## }
-## &lt;bytecode: 0x000002b4c4807508&gt;
+## &lt;bytecode: 0x00000206e981d508&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>suppressMessages</code></pre>
 <pre><code>## function (expr, classes = &quot;message&quot;) 
 ## withCallingHandlers(expr, message = function(c) if (inherits(c, 
 ##     classes)) tryInvokeRestart(&quot;muffleMessage&quot;))
-## &lt;bytecode: 0x000002b4d015b7e8&gt;
+## &lt;bytecode: 0x00000206f51a4778&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>options(error = expression(NULL))</code></pre>
 <pre class="r"><code>data_dec2020 &lt;- read_csv(here(&quot;data&quot;, &quot;Data_by_Prescriber_Location_December_2020.csv&quot;)) %&gt;% 
@@ -487,6 +488,13 @@ suppressWarnings</code></pre>
 joined_df &lt;- combined_dec %&gt;%
   left_join(hbt_names, by = c(&quot;hbt&quot; = &quot;hb&quot;)) %&gt;% 
   select(bnf_item_description, paid_quantity, hbt, hb_name)</code></pre>
+<pre class="r"><code>#Filter for NAPROXEN
+ joined_df_nap&lt;-joined_df %&gt;% 
+    filter(bnf_item_description == &quot;NAPROXEN 500MG TABLETS&quot;) %&gt;%
+   group_by(hb_name, bnf_item_description) %&gt;% 
+  summarise(total_paid_quantity = sum(paid_quantity, na.rm = TRUE), .groups = &quot;drop&quot;) %&gt;% 
+  arrange(hb_name, desc(total_paid_quantity))</code></pre>
+<pre class="r"><code>#Filter for only NAPROXEN 500MG Tab</code></pre>
 </div>
 
 
