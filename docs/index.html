@@ -394,6 +394,45 @@ library(sf)</code></pre>
 <pre><code>## Linking to GEOS 3.13.1, GDAL 3.11.0, PROJ 9.6.0; sf_use_s2() is TRUE</code></pre>
 <pre class="r"><code>library(ggplot2)
 
+#Suppressing warnings to avoid overcrowding
+suppressWarnings</code></pre>
+<pre><code>## function (expr, classes = &quot;warning&quot;) 
+## {
+##     withCallingHandlers(expr, warning = function(w) if (inherits(w, 
+##         classes)) 
+##         tryInvokeRestart(&quot;muffleWarning&quot;))
+## }
+## &lt;bytecode: 0x000001134d858508&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<pre class="r"><code>suppressMessages</code></pre>
+<pre><code>## function (expr, classes = &quot;message&quot;) 
+## withCallingHandlers(expr, message = function(c) if (inherits(c, 
+##     classes)) tryInvokeRestart(&quot;muffleMessage&quot;))
+## &lt;bytecode: 0x000001135918a7e8&gt;
+## &lt;environment: namespace:base&gt;</code></pre>
+<pre class="r"><code>options(error = expression(NULL))</code></pre>
+<pre class="r"><code>#QUESTION: 
+#“How do regional factors influence the prescribing rate of Omeprazole by GP practices in Scotland in December 2020 compared to 2024?
+
+
+#AIMS: 
+
+#1. Compare the trends of prescription for Omeprazole in 2020 compared to 2024 
+#2. See if Age has an influence in the rate of prescription 
+#3. Theorise and hypothesise if covid 19 may have an effect on inflammation therefore increasing the prescribing rate.
+
+#Introduction </code></pre>
+<p>December 2024 &lt; ” <a href="https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e4380152-3d16-446b-9072-108e93cf5caa/download/pitc202412.csv" class="uri">https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/e4380152-3d16-446b-9072-108e93cf5caa/download/pitc202412.csv</a>“&gt;</p>
+<p>Decemeber 2020 &lt; ” <a href="https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/0c033702-4d88-4f2d-989c-a709b1f4529e/download/pitc202012.csv" class="uri">https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/0c033702-4d88-4f2d-989c-a709b1f4529e/download/pitc202012.csv</a>”
+&gt;</p>
+<pre class="r"><code>library(tidyverse)
+library(janitor) 
+library(gt) 
+library(here)
+library(dplyr)
+library(sf)
+library(ggplot2)
+
 #Suppressing warnings to avioid overcrowding
 suppressWarnings</code></pre>
 <pre><code>## function (expr, classes = &quot;warning&quot;) 
@@ -402,149 +441,18 @@ suppressWarnings</code></pre>
 ##         classes)) 
 ##         tryInvokeRestart(&quot;muffleWarning&quot;))
 ## }
-## &lt;bytecode: 0x0000018c2080f508&gt;
+## &lt;bytecode: 0x000001134d858508&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>suppressMessages</code></pre>
 <pre><code>## function (expr, classes = &quot;message&quot;) 
 ## withCallingHandlers(expr, message = function(c) if (inherits(c, 
 ##     classes)) tryInvokeRestart(&quot;muffleMessage&quot;))
-## &lt;bytecode: 0x0000018c2c15d778&gt;
+## &lt;bytecode: 0x000001135918a7e8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>options(error = expression(NULL))</code></pre>
-<pre class="r"><code>#QUESTION: 
-#“How do regional factors influence the prescribing rate  of anti-inflammatory drugs (e.g., Naproxen) by GP practices in Scotland in 2020 compared to 2024?
-
-
-#AIMS: 
-
-#1. Compare the trends of prescription for Naproxen in 2020 compared to 2024 
-#2. See if Age has an influence in the rate of prescription 
-#3. Theorise and hypothesise if covid 19 may have an effect on inflammation therefore increasing the prescribing rate.
-
-#Introduction 
-# Naproxen is a non-steroidal anti-inflammatory drug (NSAID) that is used to alleviate inflammatory pain. There are many causes of inflammation that can be treated using naproxen in Scotland across region. Physiologically, inflammation is part of the body’s reaction to a harmful signal (Stone et.al, 2024). It is triggered by a multitude of factors including toxic chemicals, environmental agents, trauma, overuse, or infection (Stone et.al, 2024). There is a bidirectional relationship between aging and inflammation. ‘Inflammaging’ is a coined term that refers to a mild, chronic inflammation that rises as we age. Research suggests that inflammaging may play a key role in why health issues become more common as we grow older (Healthline, 2022). This data report aims to how regional factors differ in prescribing rate investigate any correlative evidence between the rate of naproxen prescription and age over the span of 4 months. </code></pre>
-<pre class="r"><code>#DATA FOR 2020 
-
-load_clean &lt;- function(file) {
-  read_csv(here(&quot;data&quot;, file)) %&gt;% clean_names()
-}
-
-files_2020 &lt;- c(
-  &quot;Data_by_Prescriber_Location_October_2020.csv&quot;,
-  &quot;Data_by_Prescriber_Location_November_2020.csv&quot;,
-  &quot;Data_by_Prescriber_Location_December_2020.csv&quot;
-)
-
-prescriber_2020 &lt;- map(files_2020, load_clean)</code></pre>
-<pre><code>## Rows: 1134673 Columns: 9
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): HBT, BNFItemCode, BNFItemDescription, ClassOfPreparationCode
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1132441 Columns: 9
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): HBT, BNFItemCode, BNFItemDescription, ClassOfPreparationCode
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1169050 Columns: 9
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): HBT, BNFItemCode, BNFItemDescription, ClassOfPreparationCode
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>names(prescriber_2020) &lt;- c(&quot;Oct_2020&quot;, &quot;Nov_2020&quot;, &quot;Dec_2020&quot;)</code></pre>
-<pre class="r"><code>#DATA FOR 2024
-
-load_clean &lt;- function(file) {
-  read_csv(here(&quot;data&quot;, file)) %&gt;% clean_names()
-}
-
-files_2024 &lt;- c(
-  &quot;Data_by_Prescriber_Location_October_2024.csv&quot;,
-  &quot;Data_by_Prescriber_Location_November_2024.csv&quot;,
-  &quot;Data_by_Prescriber_Location_December_2024.csv&quot;
-)
-
-prescriber_2024 &lt;- map(files_2024, load_clean)</code></pre>
-<pre><code>## Rows: 1289183 Columns: 10
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (5): HBT, DMDCode, BNFItemCode, BNFItemDescription, PrescribedType
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1254728 Columns: 10
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (5): HBT, DMDCode, BNFItemCode, BNFItemDescription, PrescribedType
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1278137 Columns: 10
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (5): HBT, DMDCode, BNFItemCode, BNFItemDescription, PrescribedType
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>names(prescriber_2024) &lt;- c(&quot;Oct_2024&quot;, &quot;Nov_2024&quot;, &quot;Dec_2024&quot;)
-
-
-#Board Data July-December 2024
-Board_Jul_Dec_2024&lt;-read_csv(here(&quot;data&quot;,&quot;Data_by_Board_July_to_December_2024.csv&quot;)) %&gt;% 
+<pre class="r"><code>data_dec2020 &lt;- read_csv(here(&quot;data&quot;, &quot;Data_by_Prescriber_Location_December_2020.csv&quot;)) %&gt;% 
   clean_names()</code></pre>
-<pre><code>## Warning: One or more parsing issues, call `problems()` on your data frame for details,
-## e.g.:
-##   dat &lt;- vroom(...)
-##   problems(dat)</code></pre>
-<pre><code>## Rows: 752709 Columns: 9
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): HBT, BNFItemCode, BNFItemDescription, PrescribedType
-## dbl (5): DMDCode, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, Paid...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>#FILTERING THE ANTI-INFLAMMATORY DRUGS FROM EACH DATASET 2020
-load_clean &lt;- function(file) 
-  read_csv(here(&quot;data&quot;, file)) %&gt;% 
-    clean_names() %&gt;% 
-    select(
-      hbt,
-      bnf_item_description,
-      paid_quantity,
-    ) %&gt;% 
-  filter(str_detect(bnf_item_description, regex(&quot;anti-inflammatory|naproxen&quot;, ignore_case = TRUE))) 
-
-prescriber_2020 &lt;- map(files_2020, load_clean)</code></pre>
-<pre><code>## Rows: 1134673 Columns: 9
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): HBT, BNFItemCode, BNFItemDescription, ClassOfPreparationCode
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1132441 Columns: 9
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (4): HBT, BNFItemCode, BNFItemDescription, ClassOfPreparationCode
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1169050 Columns: 9
+<pre><code>## Rows: 1169050 Columns: 9
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
 ## chr (4): HBT, BNFItemCode, BNFItemDescription, ClassOfPreparationCode
@@ -552,35 +460,9 @@ prescriber_2020 &lt;- map(files_2020, load_clean)</code></pre>
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>#FILTERING THE ANTI-INFLAMMATORY DRUGS FROM EACH DATASET 2024
-load_clean &lt;- function(file) 
-  read_csv(here(&quot;data&quot;, file)) %&gt;% 
-    clean_names() %&gt;% 
-    select(
-      hbt,
-      bnf_item_description,
-      paid_quantity,
-    ) %&gt;% 
-  filter(str_detect(bnf_item_description, regex(&quot;anti-inflammatory|naproxen&quot;, ignore_case = TRUE))) 
-
-prescriber_2024 &lt;- map(files_2024, load_clean)</code></pre>
-<pre><code>## Rows: 1289183 Columns: 10
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (5): HBT, DMDCode, BNFItemCode, BNFItemDescription, PrescribedType
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1254728 Columns: 10
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (5): HBT, DMDCode, BNFItemCode, BNFItemDescription, PrescribedType
-## dbl (5): GPPractice, NumberOfPaidItems, PaidQuantity, GrossIngredientCost, P...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-## Rows: 1278137 Columns: 10
+<pre class="r"><code>data_dec2024 &lt;- read_csv(here(&quot;data&quot;, &quot;Data_by_Prescriber_Location_December_2024.csv&quot;)) %&gt;% 
+  clean_names()</code></pre>
+<pre><code>## Rows: 1278137 Columns: 10
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
 ## chr (5): HBT, DMDCode, BNFItemCode, BNFItemDescription, PrescribedType
@@ -588,14 +470,7 @@ prescriber_2024 &lt;- map(files_2024, load_clean)</code></pre>
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>#FILTERING THE ANTI-INFLAMMATORY DRUGS FROM EACH DATASET 
-Filt_Board_Jul_Dec_2024 &lt;-Board_Jul_Dec_2024 %&gt;% 
-  select(
-      hbt,
-      bnf_item_description,
-      paid_quantity,
-    ) %&gt;% 
-  filter(str_detect(bnf_item_description, regex(&quot;anti-inflammatory|naproxen&quot;, ignore_case = TRUE)))</code></pre>
+<pre class="r"><code>combined_dec &lt;- bind_rows(data_dec2020, data_dec2024)</code></pre>
 </div>
 
 
